@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <Bounce2.h>
 
-#define UP_BUTTON 6
-#define DOWN_BUTTON 7
+#define UP_BUTTON 7
+#define DOWN_BUTTON 6
 
 #define PHASE_SWAP_RELAY_1_1 A5
 #define PHASE_SWAP_RELAY_1_2 A4
@@ -66,13 +66,18 @@ void loop() {
         btn.button.update();
     }
 
-    bool isUpButtonPressed = buttons[0].button.pressed();
-    bool isUpButtonReleased = buttons[0].button.released();
-    bool isDownButtonPressed = buttons[1].button.pressed();
-    bool isDownButtonReleased = buttons[1].button.released();
-    bool isBothButtonsPressed = buttons[0].button.isPressed() && buttons[1].button.isPressed();
+    bool upButtonPressed = buttons[0].button.pressed();
+    bool upButtonReleased = buttons[0].button.released();
+    bool downButtonPressed = buttons[1].button.pressed();
+    bool downButtonReleased = buttons[1].button.released();
+    bool bothButtonsPressed = buttons[0].button.isPressed() && buttons[1].button.isPressed();
+    
+    bool upperLimitReached = buttons[2].button.isPressed() || buttons[4].button.isPressed();
+    bool lowerLimitReached = buttons[3].button.isPressed() || buttons[5].button.isPressed();
+    bool holdingUpButton = buttons[0].button.isPressed();
+    bool holdingDownButton = buttons[1].button.isPressed();
 
-    if (isBothButtonsPressed) {
+    if (bothButtonsPressed) {
         Serial.println("Both buttons pressed");
         digitalWrite(PHASE_SWAP_RELAY_1_1, HIGH);
         digitalWrite(PHASE_SWAP_RELAY_1_2, HIGH);
@@ -81,18 +86,41 @@ void loop() {
         return;
     }
 
-    if (isUpButtonPressed) {
+    if (upperLimitReached && holdingUpButton)
+    {
+      Serial.println("Upper Limit reached");
+      digitalWrite(PHASE_SWAP_RELAY_1_1, HIGH);
+      digitalWrite(PHASE_SWAP_RELAY_1_2, HIGH);
+      digitalWrite(PHASE_SWAP_RELAY_2_1, HIGH);
+      digitalWrite(PHASE_SWAP_RELAY_2_2, HIGH);
+      return;
+    }
+
+    if (lowerLimitReached && holdingDownButton)
+    {
+      Serial.println("Lower Limit reached");
+      digitalWrite(PHASE_SWAP_RELAY_1_1, HIGH);
+      digitalWrite(PHASE_SWAP_RELAY_1_2, HIGH);
+      digitalWrite(PHASE_SWAP_RELAY_2_1, HIGH);
+      digitalWrite(PHASE_SWAP_RELAY_2_2, HIGH);
+      return;
+    }
+    
+
+    if (upButtonPressed) {
+        Serial.println("going up");
         digitalWrite(PHASE_SWAP_RELAY_1_1, LOW);
         digitalWrite(PHASE_SWAP_RELAY_1_2, LOW);
-    } else if (isUpButtonReleased) {
+    } else if (upButtonReleased) {
         digitalWrite(PHASE_SWAP_RELAY_1_1, HIGH);
         digitalWrite(PHASE_SWAP_RELAY_1_2, HIGH);
     }
 
-    if (isDownButtonPressed) {
+    if (downButtonPressed) {
+        Serial.println("going down");
         digitalWrite(PHASE_SWAP_RELAY_2_1, LOW);
         digitalWrite(PHASE_SWAP_RELAY_2_2, LOW);
-    } else if (isDownButtonReleased) {
+    } else if (downButtonReleased) {
         digitalWrite(PHASE_SWAP_RELAY_2_1, HIGH);
         digitalWrite(PHASE_SWAP_RELAY_2_2, HIGH);
     }
